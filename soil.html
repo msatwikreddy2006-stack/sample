@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AgroDiagnose</title>
+
+<style>
+body{font-family:Arial;margin:0;background:#f4f7f6;}
+header{background:green;color:white;padding:20px;text-align:center;font-size:22px;}
+.section{
+background:white;
+margin:20px;
+padding:20px;
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,0.15);
+}
+select,input,button{
+width:100%;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+button{
+background:green;
+color:white;
+border:none;
+cursor:pointer;
+font-weight:bold;
+}
+button:hover{background:#0a7a0a;}
+.lang-container{
+position:fixed;
+top:15px;
+right:20px;
+z-index:1000;
+}
+.lang-box{
+display:flex;
+align-items:center;
+background:white;
+padding:6px 12px;
+border-radius:25px;
+box-shadow:0 3px 8px rgba(0,0,0,0.2);
+}
+.globe{margin-right:6px;font-size:18px;}
+.lang-select{
+border:none;
+outline:none;
+background:transparent;
+cursor:pointer;
+}
+pre{white-space:pre-wrap;}
+</style>
+</head>
+
+<body>
+
+<div class="lang-container">
+<div class="lang-box">
+<span class="globe">🌐</span>
+<select class="lang-select" onchange="changeLanguage(this.value)">
+<option value="en">English</option>
+<option value="hi">हिंदी</option>
+<option value="te">తెలుగు</option>
+</select>
+</div>
+</div>
+
+<header id="title"></header>
+
+<div class="section">
+
+<h3 id="seasonLabel"></h3>
+<select id="season">
+<option value="">Select</option>
+<option value="kharif">Kharif (खरीफ / ఖరీఫ్)</option>
+<option value="rabi">Rabi (रबी / రబీ)</option>
+<option value="zaid">Zaid (जायद / జాయిడ్)</option>
+</select>
+
+<label id="landLabel"></label>
+<input type="number" id="land" min="1" value="1">
+
+<h3 id="soilLabel"></h3>
+
+<label id="colorLabel"></label>
+<select id="color">
+<option value="">Select</option>
+<option value="black">Black (काली / నల్ల)</option>
+<option value="red">Red (लाल / ఎరుపు)</option>
+<option value="brown">Brown (भूरी / గోధుమ)</option>
+<option value="sandy">Sandy (रेतीली / ఇసుక)</option>
+</select>
+
+<label id="waterLabel"></label>
+<select id="water">
+<option value="">Select</option>
+<option value="stay">Water stays (रुकता है / నిలుస్తుంది)</option>
+<option value="drain">Water drains (निकल जाता है / పోతుంది)</option>
+</select>
+
+<label id="growthLabel"></label>
+<select id="growth">
+<option value="">Select</option>
+<option value="good">Good (अच्छी / మంచిది)</option>
+<option value="average">Average (सामान्य / సాధారణం)</option>
+<option value="poor">Poor (खराब / చెడు)</option>
+</select>
+
+<button onclick="startVoice()">🎤 Voice Input</button>
+<button onclick="analyze()">Analyze</button>
+
+</div>
+
+<div class="section" id="resultBox" style="display:none;">
+<h3>Result</h3>
+<pre id="result"></pre>
+<button onclick="speakResult()">🔊 Speak Result</button>
+</div>
+
+<script>
+
+let currentLang="en";
+
+function changeLanguage(lang){
+currentLang=lang;
+document.getElementById("title").innerText =
+lang==="hi"?"🌾 एग्रो डायग्नोज":
+lang==="te"?"🌾 అగ్రో డయగ్నోస్":
+"🌾 AgroDiagnose – Smart Soil Assistant";
+
+document.getElementById("seasonLabel").innerText =
+lang==="hi"?"मौसम चुनें":
+lang==="te"?"సీజన్ ఎంచుకోండి":
+"Select Season";
+
+document.getElementById("landLabel").innerText =
+lang==="hi"?"जमीन (एकड़)":
+lang==="te"?"భూమి (ఎకరాలు)":
+"Land (acres)";
+
+document.getElementById("soilLabel").innerText =
+lang==="hi"?"मिट्टी की जानकारी":
+lang==="te"?"నేల వివరాలు":
+"Soil Details";
+
+document.getElementById("colorLabel").innerText =
+lang==="hi"?"मिट्टी का रंग":
+lang==="te"?"నేల రంగు":
+"Soil Color";
+
+document.getElementById("waterLabel").innerText =
+lang==="hi"?"पानी की स्थिति":
+lang==="te"?"నీటి పరిస్థితి":
+"Water Condition";
+
+document.getElementById("growthLabel").innerText =
+lang==="hi"?"फसल वृद्धि":
+lang==="te"?"పంట పెరుగుదల":
+"Crop Growth";
+}
+
+window.onload=function(){ changeLanguage("en"); };
+
+function startVoice(){
+const recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+recognition.lang=currentLang==="hi"?"hi-IN":currentLang==="te"?"te-IN":"en-IN";
+recognition.start();
+
+recognition.onresult=function(event){
+let text=event.results[0][0].transcript.toLowerCase();
+
+if(text.includes("बरसात")||text.includes("వాన")||text.includes("rain")) season.value="kharif";
+if(text.includes("सर्दी")||text.includes("చలి")) season.value="rabi";
+if(text.includes("गर्मी")||text.includes("వేసవి")) season.value="zaid";
+
+if(text.includes("काली")||text.includes("నల్ల")) color.value="black";
+if(text.includes("लाल")||text.includes("ఎరుపు")) color.value="red";
+
+if(text.includes("रुक")||text.includes("నిల")) water.value="stay";
+if(text.includes("जल्दी")||text.includes("పోతుంది")) water.value="drain";
+
+if(text.includes("अच्छ")||text.includes("మంచి")) growth.value="good";
+if(text.includes("सामान")||text.includes("సాధారణ")) growth.value="average";
+if(text.includes("खराब")||text.includes("చెడు")) growth.value="poor";
+
+alert("Voice processed");
+};
+}
+
+function analyze(){
+
+if(!season.value) return alert("Please select season");
+if(!color.value) return alert("Please select soil color");
+if(!water.value) return alert("Please select water condition");
+if(!growth.value) return alert("Please select growth");
+if(!land.value || land.value<=0) return alert("Enter valid land");
+
+fetch("http://localhost:5000/analyze",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+season:season.value,
+color:color.value,
+water:water.value,
+growth:growth.value,
+land:land.value,
+lang:currentLang
+})
+})
+.then(res=>res.json())
+.then(data=>{
+if(data.error) return alert(data.error);
+resultBox.style.display="block";
+result.innerText=data.result;
+});
+}
+
+function speakResult(){
+const speech=new SpeechSynthesisUtterance(result.innerText);
+speech.lang=currentLang==="hi"?"hi-IN":currentLang==="te"?"te-IN":"en-IN";
+window.speechSynthesis.speak(speech);
+}
+
+</script>
+</body>
+</html>
